@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Intro to Leaflet</title>
+	<!-- the Leaflet CSS -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+	<!-- the Leaflet JavaScript library -->
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+	<!-- jQuery -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	
+</head>
+
+<body>
+	<h1>Earthquakes that have occurred in the past 24 hours</h1>
+	
+	<!-- code where we create and name the container that holds the map -->
+	<div id="map" style="height: 90vh"></div>
+	<a href="index2.html"><button>Click for map with dropdown menu</button></a>
+	<p>This map depicts all earthquakes that have occurred in the past 24 hours. Data comes from the <a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php">USGS Live Earthquake Feed</a> and is updated every minute. Additionally, the map shows active faults using data from the <a href = "https://github.com/cossatot/gem-global-active-faults">GEM Foundation's Global Active Faults Database</a>. Click on an earthquake to find out more information about the event.</p>
+	<p>The Pacific Northwest lies along the Cascadia fault. Tectonic activity along this fault could cause a catastrophic earthquake that would produce major damage throughout our region. Learn about how researchers at the University of Washington are modelling earthquake risk and preparing for disaster response at the <a href="https://hazards.uw.edu/geology/m9/">M9 Project</a>.</p>
+	
+	<!-- link that loads the fault line data from an external file -->
+	<script type="text/javascript" src="data/faults.js"></script>
+	
+	<!--CSS styles-->
+	<style>
+        body {
+			font-family: sans-serif;
+			max-width: 900px;
+			margin: auto;
+		}
+	</style>
+	<!-- code where we build the map and its functionality -->
+	<script>
+		// Map Initialisation
+		var mymap = L.map('map').setView([0, 0], 2);
+		
+		// Stamen layer
+		var Stamen = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+		});
+		// OpenStreetMap layer
+		var OpenStreetMap_Mapnik = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+		});
+		// OpenTopoMap layer
+		var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+		maxZoom: 17,
+		attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+		});
+		// Google street
+		googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+		maxZoom: 20,
+		subdomains:['mt0','mt1','mt2','mt3']
+		});
+		// Google Satellite
+		googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+		maxZoom: 20,
+		subdomains:['mt0','mt1','mt2','mt3']
+		});
+
+		// Add layer to map, added numerous map providers which can be changed here
+		Stamen.addTo(mymap)
+
+		// load earthquake GeoJSON from an external file and add it to the map as a layer
+		var earthquakes = $.getJSON("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",function(data){
+    	L.geoJson(data, {
+			pointToLayer: function(feature, latlng){
+				var marker = L.marker(latlng);
+				marker.bindPopup("Location: " + feature.properties.place + "<br>Magnitude: " + feature.properties.mag + "<br><a href =" + feature.properties.url + ">More info</a>"); 
+				return marker;
+				} //target = _blank had to be removed as it was breaking the links
+			}).addTo(mymap);
+		});
+		
+		/*
+		// add the fault line data to the map as a layer. Here, faults is the name of the variable we created in the faults.js file to hold all of the fault line GeoJSON data. We use the L.geoJson() method to create a layer from that data, then use the .addTo() method to add the layer to the map.
+		L.geoJson(faults,
+			interactive: false
+		}).addTo(mymap);
+		*/
+		
+		// add the fault line data to the map as a layer with the name & catalog id showing in a popup
+		var fault_lines = L.geoJSON(faults, {
+			onEachFeature: function (feature, layer) {
+			layer.bindPopup('<p>Fault name: '+feature.properties.name+'<br>Catalog ID: '+feature.properties.catalog_id+'</p>');
+		}
+		}).addTo(mymap);
+	</script>
+	<br><br>
+	<p><h1>Following below is the Google map of the places I have lived and traveled to in an iframe</h1></p>
+	<iframe src="https://www.google.com/maps/d/u/1/embed?mid=1lKfFtQcD7aI6gZcyD3UTEqXBtBLDeLs&ehbc=2E312F" width="900" height="480"></iframe>	
+</body>
+</html>
